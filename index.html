@@ -648,10 +648,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
       </div>
       <div class="form-group"><label class="form-label">Mood</label>
         <div class="chip-row" id="m_moodPicker">
-          <div class="chip" onclick="pickMood('😍',this)">😍</div>
-          <div class="chip" onclick="pickMood('😊',this)">😊</div>
-          <div class="chip" onclick="pickMood('😐',this)">😐</div>
-          <div class="chip" onclick="pickMood('😕',this)">😕</div>
+          <div class="chip" onclick="pickMood('great',this)" title="Great"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 3 4 3 4-3 4-3"/><line x1="9" y1="9" x2="9.01" y2="9" stroke-width="3"/><line x1="15" y1="9" x2="15.01" y2="9" stroke-width="3"/><path d="M10 7.5c0-1 .5-1.5 2-1.5s2 .5 2 1.5"/></svg> Great</div>
+          <div class="chip" onclick="pickMood('good',this)" title="Good"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9" stroke-width="3"/><line x1="15" y1="9" x2="15.01" y2="9" stroke-width="3"/></svg> Good</div>
+          <div class="chip" onclick="pickMood('okay',this)" title="Okay"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="14" x2="16" y2="14"/><line x1="9" y1="9" x2="9.01" y2="9" stroke-width="3"/><line x1="15" y1="9" x2="15.01" y2="9" stroke-width="3"/></svg> Okay</div>
+          <div class="chip" onclick="pickMood('bad',this)" title="Bad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9" stroke-width="3"/><line x1="15" y1="9" x2="15.01" y2="9" stroke-width="3"/></svg> Bad</div>
         </div>
       </div>
     </div>
@@ -1446,7 +1446,7 @@ function renderExRows(){
       <input class="form-input" style="width:52px" type="number" placeholder="Sets" min="1" value="${r.sets||''}" oninput="gymExRows[${i}].sets=+this.value">
       <input class="form-input" style="width:52px" type="number" placeholder="Reps" min="1" value="${r.reps||''}" oninput="gymExRows[${i}].reps=+this.value">
       <input class="form-input" style="width:58px" type="number" placeholder="kg" step="0.5" value="${r.weight||''}" oninput="gymExRows[${i}].weight=+this.value||0">
-      <button class="btn btn-danger btn-icon" onclick="removeExRow(${i})">✕</button>
+      <button class="btn btn-danger btn-icon" onclick="removeExRow(${i})">${SVG_TRASH}</button>
     </div>`).join('');
 }
 
