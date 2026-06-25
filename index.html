@@ -461,9 +461,11 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
         <button class="tab-btn" onclick="setFoodTab('dinner',this)">🌙 Dinner</button>
         <button class="tab-btn" onclick="setFoodTab('snack',this)">🍿 Snack</button>
         <button class="tab-btn" onclick="setFoodTab('tea',this)">☕ Tea</button>
+        <button class="tab-btn" onclick="setFoodTab('supplements',this)">💊 Suppl.</button>
+        <button class="tab-btn" onclick="setFoodTab('grocery',this)">🛒 Grocery</button>
       </div>
       <button class="btn btn-ghost text-sm" style="margin-left:auto;padding:7px 14px" onclick="clearFoodFilter()">Clear</button>
-      <button class="btn btn-primary" onclick="openMealModal()">+ Log Meal</button>
+      <button class="btn btn-primary" id="f_addBtn" onclick="openMealModal()">+ Log Meal</button>
     </div>
 
     <div class="card"><div class="tx-list" id="f_logList"></div></div>
@@ -614,6 +616,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
         <div class="chip" onclick="pickMealType('dinner',this)">🌙 Dinner</div>
         <div class="chip" onclick="pickMealType('snack',this)">🍿 Snack</div>
         <div class="chip" onclick="pickMealType('tea',this)">☕ Tea</div>
+        <div class="chip" onclick="pickMealType('supplements',this)">💊 Supplements</div>
       </div>
     </div>
     <div class="form-grid" style="grid-template-columns:2fr 1fr 1fr;margin-bottom:12px">
@@ -652,6 +655,23 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal('mealModal')">Cancel</button>
       <button class="btn btn-primary" onclick="saveMeal()"><span id="mealSaveLbl">Save Meal</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ GROCERY MODAL ════ -->
+<div class="modal-overlay" id="groceryModal">
+  <div class="modal">
+    <div class="modal-title">🛒 Add Grocery / Market Expense</div>
+    <div class="form-grid cols2" style="margin-bottom:14px">
+      <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="gr_date"></div>
+      <div class="form-group"><label class="form-label">Total Amount (₹)</label><input class="form-input" type="number" id="gr_amount" placeholder="e.g. 350"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:14px"><label class="form-label">What did you buy? (optional)</label><input class="form-input" id="gr_note" placeholder="e.g. Vegetables, Oil, Masala..."></div>
+    <div class="form-group" style="margin-bottom:4px"><label class="form-label">Extra notes (optional)</label><textarea class="form-textarea" id="gr_items" style="min-height:55px" placeholder="Any extra details..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('groceryModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveGrocery()">Save</button>
     </div>
   </div>
 </div>
@@ -737,7 +757,7 @@ const _DOC = _db.collection('healthify').doc('main');
 
 // ── State ──
 let S = {
-  meals:[], sleeps:[], bodyNotes:[], checklist:{},
+  meals:[], sleeps:[], bodyNotes:[], checklist:{}, groceries:[],
   goals:{ daily:300, monthly:6000, alertPct:80, protein:60, weight:65, sleepGoal:8, bedtime:'22:30' }
 };
 let editMealId=null, activeMealType='breakfast', activeMood='', sleepStars=0, activeBodyCateg='bath';
@@ -750,10 +770,11 @@ const FOOD_DB = {
   lunch:['Rice & Sambar','Curd Rice','Biriyani','Meals','Rajma Rice','Dal Rice','Fried Rice','Lemon Rice','Tomato Rice','Pulao','Rasam Rice'],
   dinner:['Chapati','Roti','Paratha','Dosa','Khichdi','Dal Tadka','Palak Paneer','Egg Curry','Chicken Curry','Fish Curry','Rasam','Soup'],
   snack:['Sundal','Murukku','Bajji','Bonda','Samosa','Pani Puri','Chips','Peanuts','Sweet Corn'],
-  tea:['Tea','Coffee','Filter Coffee','Chai','Green Tea','Lassi','Buttermilk','Coconut Water']
+  tea:['Tea','Coffee','Filter Coffee','Chai','Green Tea','Lassi','Buttermilk','Coconut Water'],
+  supplements:['Egg (boiled)','Egg (scrambled)','Milk plain','Milk with seeds','Red Banana','Banana']
 };
-const PROTEIN_DB = {'idli sambar':4,'dosa':3,'poha':3,'pongal':5,'medu vada':4,'rice & sambar':7,'curd rice':6,'biriyani':15,'meals':12,'dal rice':10,'egg curry':14,'chicken curry':22,'fish curry':18,'palak paneer':12,'rajma rice':11,'khichdi':9,'dal tadka':9,'chapati':4,'roti':3,'paratha':5,'sundal':7,'peanuts':7,'filter coffee':1,'tea':1,'coffee':1,'chai':1,'lassi':4,'buttermilk':3};
-const PRICE_DB  = {'idli sambar':40,'dosa':50,'poha':30,'upma':30,'pongal':50,'tea':15,'coffee':20,'filter coffee':25,'chai':10,'biriyani':120,'meals':80,'chapati':15,'paratha':40,'samosa':10,'pani puri':30,'coconut water':25,'buttermilk':20};
+const PROTEIN_DB = {'idli sambar':4,'dosa':3,'poha':3,'pongal':5,'medu vada':4,'rice & sambar':7,'curd rice':6,'biriyani':15,'meals':12,'dal rice':10,'egg curry':14,'chicken curry':22,'fish curry':18,'palak paneer':12,'rajma rice':11,'khichdi':9,'dal tadka':9,'chapati':4,'roti':3,'paratha':5,'sundal':7,'peanuts':7,'filter coffee':1,'tea':1,'coffee':1,'chai':1,'lassi':4,'buttermilk':3,'egg (boiled)':6,'egg (scrambled)':6,'milk plain':8,'milk with seeds':9,'red banana':1,'banana':1};
+const PRICE_DB  = {'idli sambar':40,'dosa':50,'poha':30,'upma':30,'pongal':50,'tea':15,'coffee':20,'filter coffee':25,'chai':10,'biriyani':120,'meals':80,'chapati':15,'paratha':40,'samosa':10,'pani puri':30,'coconut water':25,'buttermilk':20,'egg (boiled)':7,'egg (scrambled)':7,'milk plain':25,'milk with seeds':30,'red banana':10,'banana':8};
 
 const CHECKLIST = [
   {id:'bath',     emoji:'🚿', name:'Bath',       sub:'Daily shower'},
@@ -804,14 +825,14 @@ function setSyncStatus(s) {
 }
 async function persist() {
   setSyncStatus('syncing');
-  try { await _DOC.set({meals:S.meals, sleeps:S.sleeps, bodyNotes:S.bodyNotes, checklist:S.checklist, goals:S.goals}); setSyncStatus('ok'); }
+  try { await _DOC.set({meals:S.meals, sleeps:S.sleeps, bodyNotes:S.bodyNotes, checklist:S.checklist, goals:S.goals, groceries:S.groceries}); setSyncStatus('ok'); }
   catch(e) { setSyncStatus('error'); toast('Sync error: '+e.message,'error'); }
 }
 async function loadState() {
   setSyncStatus('syncing');
   try {
     const snap = await _DOC.get();
-    if(snap.exists) { const d=snap.data(); if(d.meals) S.meals=d.meals; if(d.sleeps) S.sleeps=d.sleeps; if(d.bodyNotes) S.bodyNotes=d.bodyNotes; if(d.checklist) S.checklist=d.checklist; if(d.goals) S.goals={...S.goals,...d.goals}; }
+    if(snap.exists) { const d=snap.data(); if(d.meals) S.meals=d.meals; if(d.sleeps) S.sleeps=d.sleeps; if(d.bodyNotes) S.bodyNotes=d.bodyNotes; if(d.checklist) S.checklist=d.checklist; if(d.goals) S.goals={...S.goals,...d.goals}; if(d.groceries) S.groceries=d.groceries; }
     setSyncStatus('ok');
   } catch(e) { setSyncStatus('error'); }
   init();
@@ -852,7 +873,8 @@ document.querySelectorAll('.modal-overlay').forEach(o=>o.addEventListener('click
 function renderDashboard() {
   const t = today();
   const tm = S.meals.filter(m=>m.date===t);
-  const spend = tm.reduce((s,m)=>s+m.price,0);
+  const grocerySpend = S.groceries.filter(g=>g.date===t).reduce((s,g)=>s+g.amount,0);
+  const spend = tm.reduce((s,m)=>s+m.price,0) + grocerySpend;
   const prot  = tm.reduce((s,m)=>s+(m.protein||0),0);
   const lastSleep = S.sleeps.filter(s=>s.type!=='nap').sort((a,b)=>b.ts-a.ts)[0];
   const ck = S.checklist[t]||{};
@@ -901,9 +923,9 @@ function renderDashboard() {
 }
 
 function mealTxHtml(m) {
-  const bg={breakfast:'#FEF3CC',lunch:'#E8F5EE',dinner:'#F3E5F5',snack:'#FFEBEE',tea:'#E3F2FD'};
-  const cl={breakfast:'#9A6E00',lunch:'#2D7A4F',dinner:'#6A1B9A',snack:'#C62828',tea:'#1565C0'};
-  const em={breakfast:'☀️',lunch:'🌞',dinner:'🌙',snack:'🍿',tea:'☕'};
+  const bg={breakfast:'#FEF3CC',lunch:'#E8F5EE',dinner:'#F3E5F5',snack:'#FFEBEE',tea:'#E3F2FD',supplements:'#F3E8FF'};
+  const cl={breakfast:'#9A6E00',lunch:'#2D7A4F',dinner:'#6A1B9A',snack:'#C62828',tea:'#1565C0',supplements:'#6D28D9'};
+  const em={breakfast:'☀️',lunch:'🌞',dinner:'🌙',snack:'🍿',tea:'☕',supplements:'💊'};
   return `<div class="tx-item">
     <div class="tx-icon" style="background:${bg[m.mealType]||'#eee'}">${em[m.mealType]||'🍽️'}</div>
     <div class="tx-info"><div class="tx-title">${esc(m.name)}</div><div class="tx-sub">${m.protein?m.protein+'g protein · ':''}${cap(m.source||'')}</div></div>
@@ -957,6 +979,37 @@ function toggleCheck(id) {
 // ══════════════════════════════ FOOD LOG
 function renderFoodLog() {
   const dateFilter=document.getElementById('f_filterDate').value;
+  const cont=document.getElementById('f_logList');
+
+  // Grocery tab: show grocery entries only
+  if(activeFoodTab==='grocery'){
+    let gr=[...S.groceries];
+    if(dateFilter) gr=gr.filter(e=>e.date===dateFilter);
+    gr.sort((a,b)=>b.ts-a.ts);
+    if(!gr.length){ cont.innerHTML='<div class="empty-state"><div class="empty-icon">🛒</div><p>No grocery entries yet</p></div>'; return; }
+    const byDate={};
+    gr.forEach(e=>{ if(!byDate[e.date]) byDate[e.date]=[]; byDate[e.date].push(e); });
+    const dates=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+    cont.innerHTML=dates.map(d=>{
+      const ds=byDate[d].reduce((s,e)=>s+e.amount,0);
+      return `<div style="margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:8px">
+          ${fmtDate(d)} — <span class="font-mono" style="color:var(--accent)">₹${fmt(ds)}</span>
+          <span style="flex:1;height:1px;background:var(--border);display:block"></span>
+        </div>
+        ${byDate[d].map(g=>`<div class="tx-item">
+          <div class="tx-icon" style="background:#E8F5E9">🛒</div>
+          <div class="tx-info"><div class="tx-title">${esc(g.note||'Grocery purchase')}</div><div class="tx-sub">${g.items||''}</div></div>
+          <div class="tx-amount">₹${fmt(g.amount)}</div>
+          <div style="display:flex;gap:4px;margin-left:8px">
+            <button class="btn btn-danger btn-icon" onclick="deleteGrocery('${g.id}')" title="Delete">🗑</button>
+          </div>
+        </div>`).join('')}
+      </div>`;
+    }).join('');
+    return;
+  }
+
   let entries=[...S.meals];
   if(dateFilter) entries=entries.filter(e=>e.date===dateFilter);
   if(activeFoodTab!=='all') entries=entries.filter(e=>e.mealType===activeFoodTab);
@@ -970,14 +1023,13 @@ function renderFoodLog() {
   document.getElementById('f_proteinBar').className='prog-fill '+(tp>tg?'over':'blue');
   const byType={};
   tm.forEach(m=>{ byType[m.mealType]=(byType[m.mealType]||0)+(m.protein||0); });
-  const em={breakfast:'☀️',lunch:'🌞',dinner:'🌙',snack:'🍿',tea:'☕'};
+  const em={breakfast:'☀️',lunch:'🌞',dinner:'🌙',snack:'🍿',tea:'☕',supplements:'💊'};
   document.getElementById('f_byType').innerHTML=Object.entries(byType).map(([t,p])=>
     `<div style="text-align:center"><div style="font-size:1.3rem">${em[t]||''}</div><div style="font-size:11px;color:var(--text2)">${cap(t)}</div><div style="font-weight:700;font-size:13px;color:var(--info)">${p}g</div></div>`).join('');
 
   const byDate={};
   entries.forEach(e=>{ if(!byDate[e.date]) byDate[e.date]=[]; byDate[e.date].push(e); });
   const dates=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
-  const cont=document.getElementById('f_logList');
   if(!dates.length){ cont.innerHTML='<div class="empty-state"><div class="empty-icon">🍽️</div><p>No meals found</p></div>'; return; }
   cont.innerHTML=dates.map(d=>{
     const ds=byDate[d].reduce((s,e)=>s+e.price,0), dp=byDate[d].reduce((s,e)=>s+(e.protein||0),0);
@@ -992,9 +1044,9 @@ function renderFoodLog() {
 }
 
 function foodLogItem(m) {
-  const bg={breakfast:'#FEF3CC',lunch:'#E8F5EE',dinner:'#F3E5F5',snack:'#FFEBEE',tea:'#E3F2FD'};
-  const cl={breakfast:'#9A6E00',lunch:'#2D7A4F',dinner:'#6A1B9A',snack:'#C62828',tea:'#1565C0'};
-  const em={breakfast:'☀️',lunch:'🌞',dinner:'🌙',snack:'🍿',tea:'☕'};
+  const bg={breakfast:'#FEF3CC',lunch:'#E8F5EE',dinner:'#F3E5F5',snack:'#FFEBEE',tea:'#E3F2FD',supplements:'#F3E8FF'};
+  const cl={breakfast:'#9A6E00',lunch:'#2D7A4F',dinner:'#6A1B9A',snack:'#C62828',tea:'#1565C0',supplements:'#6D28D9'};
+  const em={breakfast:'☀️',lunch:'🌞',dinner:'🌙',snack:'🍿',tea:'☕',supplements:'💊'};
   const src={home:'🏠',hotel:'🏨',street:'🛺',canteen:'🏫',delivery:'📦'};
   return `<div class="tx-item">
     <div class="tx-icon" style="background:${bg[m.mealType]||'#eee'}">${em[m.mealType]||'🍽️'}</div>
@@ -1010,8 +1062,16 @@ function foodLogItem(m) {
   </div>`;
 }
 
-function setFoodTab(type,el){ activeFoodTab=type; document.querySelectorAll('#f_tabs .tab-btn').forEach(t=>t.classList.remove('active')); el.classList.add('active'); renderFoodLog(); }
-function clearFoodFilter(){ activeFoodTab='all'; document.getElementById('f_filterDate').value=''; document.querySelectorAll('#f_tabs .tab-btn').forEach((t,i)=>t.classList.toggle('active',i===0)); renderFoodLog(); }
+function setFoodTab(type,el){
+  activeFoodTab=type;
+  document.querySelectorAll('#f_tabs .tab-btn').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const btn=document.getElementById('f_addBtn');
+  if(type==='grocery'){ btn.textContent='+ Add Grocery'; btn.onclick=openGroceryModal; }
+  else { btn.textContent='+ Log Meal'; btn.onclick=openMealModal; }
+  renderFoodLog();
+}
+function clearFoodFilter(){ activeFoodTab='all'; document.getElementById('f_filterDate').value=''; document.querySelectorAll('#f_tabs .tab-btn').forEach((t,i)=>t.classList.toggle('active',i===0)); document.getElementById('f_addBtn').textContent='+ Log Meal'; document.getElementById('f_addBtn').onclick=openMealModal; renderFoodLog(); }
 
 // ── Meal Modal ──
 function openMealModal(id) {
@@ -1050,6 +1110,26 @@ function saveMeal(){
   persist(); closeModal('mealModal'); renderAll(); toast(editMealId?'Meal updated!':'🍽️ Meal logged!');
 }
 function deleteMeal(id){ if(!confirm('Delete this meal?')) return; S.meals=S.meals.filter(m=>m.id!==id); persist(); renderAll(); toast('Deleted'); }
+
+// ── Grocery Modal ──
+function openGroceryModal(){
+  document.getElementById('gr_date').value=today();
+  document.getElementById('gr_amount').value='';
+  document.getElementById('gr_note').value='';
+  document.getElementById('gr_items').value='';
+  openModal('groceryModal');
+}
+function saveGrocery(){
+  const date=document.getElementById('gr_date').value;
+  const amount=parseFloat(document.getElementById('gr_amount').value)||0;
+  const note=document.getElementById('gr_note').value.trim();
+  const items=document.getElementById('gr_items').value.trim();
+  if(!amount){toast('Enter amount spent','error');return;}
+  if(!date){toast('Select date','error');return;}
+  S.groceries.unshift({id:uid(),date,amount,note,items,ts:Date.now()});
+  persist(); closeModal('groceryModal'); renderAll(); toast('🛒 Grocery saved!');
+}
+function deleteGrocery(id){ if(!confirm('Delete this entry?')) return; S.groceries=S.groceries.filter(g=>g.id!==id); persist(); renderAll(); toast('Deleted'); }
 
 // ══════════════════════════════ SLEEP
 function renderSleepLog(){
