@@ -722,7 +722,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 <!-- ════ SLEEP MODAL ════ -->
 <div class="modal-overlay" id="sleepModal">
   <div class="modal">
-    <div class="modal-title">Log Sleep</div>
+    <div class="modal-title" id="sleepModalTitle">Log Sleep</div>
     <div class="form-grid" style="margin-bottom:12px">
       <div class="form-group"><label class="form-label">Date (night of)</label><input class="form-input" type="date" id="sl_date"></div>
       <div class="form-group"><label class="form-label">Bedtime</label><input class="form-input" type="time" id="sl_bed" value="22:30"></div>
@@ -808,7 +808,7 @@ let S = {
   goals:{ daily:300, monthly:6000, alertPct:80, protein:60, weight:65, sleepGoal:8, bedtime:'22:30',
     gymSchedule:['rest','upper','upper','lower','upper','upper','lower'] }
 };
-let editMealId=null, activeMealType='breakfast', activeMood='', sleepStars=0, activeBodyCateg='bath';
+let editMealId=null, editSleepId=null, activeMealType='breakfast', activeMood='', sleepStars=0, activeBodyCateg='bath';
 let activeFoodTab='all', activeBodyTab='bath';
 let insCharts={};
 
@@ -1050,7 +1050,7 @@ function renderFoodLog() {
           <div class="tx-info"><div class="tx-title">${esc(g.note||'Grocery purchase')}</div><div class="tx-sub">${g.items||''}</div></div>
           <div class="tx-amount">₹${fmt(g.amount)}</div>
           <div style="display:flex;gap:4px;margin-left:8px">
-            <button class="btn btn-danger btn-icon" onclick="deleteGrocery('${g.id}')" title="Delete">🗑</button>
+            <button class="btn btn-danger btn-icon" onclick="deleteGrocery('${g.id}')" title="Delete">${SVG_TRASH}</button>
           </div>
         </div>`).join('')}
       </div>`;
@@ -1104,8 +1104,8 @@ function foodLogItem(m) {
     </div>
     <div class="tx-amount">₹${fmt(m.price)}</div>
     <div style="display:flex;gap:4px;margin-left:8px">
-      <button class="btn btn-ghost btn-icon" onclick="openMealModal('${m.id}')" title="Edit">✏️</button>
-      <button class="btn btn-danger btn-icon" onclick="deleteMeal('${m.id}')" title="Delete">🗑</button>
+      <button class="btn btn-ghost btn-icon" onclick="openMealModal('${m.id}')" title="Edit">${SVG_EDIT}</button>
+      <button class="btn btn-danger btn-icon" onclick="deleteMeal('${m.id}')" title="Delete">${SVG_TRASH}</button>
     </div>
   </div>`;
 }
@@ -1180,53 +1180,100 @@ function saveGrocery(){
 function deleteGrocery(id){ if(!confirm('Delete this entry?')) return; S.groceries=S.groceries.filter(g=>g.id!==id); persist(); renderAll(); toast('Deleted'); }
 
 // ══════════════════════════════ SLEEP
-const SLEEP_ICON = {night:'🌙', split:'🌗', nap:'😪'};
+const SLEEP_SVG = {
+  night:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5C6BC0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`,
+  split:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/></svg>`,
+  nap:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0288D1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2"/><path d="M12 6v6l4 2"/></svg>`
+};
+const SLEEP_BG    = {night:'#E8EAF6', split:'#F3E8FF', nap:'#E1F5FE'};
+const SLEEP_LABEL = {night:'Night Sleep', split:'Split Sleep', nap:'Nap'};
+const SVG_EDIT = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+const SVG_TRASH = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+
+function svgStar(filled){ return `<svg width="13" height="13" viewBox="0 0 24 24" fill="${filled?'#F59E0B':'none'}" stroke="#F59E0B" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`; }
+function starsHtml(n){ return Array.from({length:5},(_,i)=>svgStar(i<n)).join(''); }
+
 function renderSleepLog(){
   const entries=[...S.sleeps].sort((a,b)=>b.ts-a.ts);
-  // For stats: per-day total of night+split sessions
+  // Per-day total INCLUDING naps
   const last7days=getLastN(7);
-  const dayTotals=last7days.map(d=>{
-    const dayEntries=entries.filter(e=>e.date===d&&e.type!=='nap');
-    return dayEntries.reduce((s,e)=>s+e.duration,0);
-  }).filter(d=>d>0);
+  const dayTotals=last7days.map(d=>entries.filter(e=>e.date===d).reduce((s,e)=>s+e.duration,0)).filter(d=>d>0);
   const avgDur=dayTotals.length?dayTotals.reduce((s,d)=>s+d,0)/dayTotals.length:0;
-  const last7entries=entries.filter(e=>last7days.includes(e.date)&&e.type!=='nap');
-  const avgQual=last7entries.length?last7entries.reduce((s,e)=>s+(e.quality||0),0)/last7entries.length:0;
-  // Best single day total
+  const ratedEntries=entries.filter(e=>last7days.includes(e.date)&&e.quality>0);
+  const avgQual=ratedEntries.length?ratedEntries.reduce((s,e)=>s+e.quality,0)/ratedEntries.length:0;
   const byDate={};
-  entries.filter(e=>e.type!=='nap').forEach(e=>{ byDate[e.date]=(byDate[e.date]||0)+e.duration; });
+  entries.forEach(e=>{ byDate[e.date]=(byDate[e.date]||0)+e.duration; });
   const best=Object.values(byDate).length?Math.max(...Object.values(byDate)):0;
   document.getElementById('sl_avg').textContent=avgDur?fmtDur(Math.round(avgDur)):'–';
-  document.getElementById('sl_qual').textContent=avgQual?avgQual.toFixed(1)+'⭐':'–';
+  document.getElementById('sl_qual').textContent=avgQual?avgQual.toFixed(1)+' / 5':'–';
   document.getElementById('sl_best').textContent=best?fmtDur(best):'–';
   document.getElementById('sl_count').textContent=Object.keys(byDate).length;
+
   const cont=document.getElementById('sl_logList');
-  if(!entries.length){cont.innerHTML='<div class="empty-state"><div class="empty-icon">🌙</div><p>No sleep logged yet</p></div>';return;}
-  // Group by date
+  if(!entries.length){ cont.innerHTML=`<div class="empty-state"><div class="empty-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div><p>No sleep logged yet</p></div>`; return; }
+
   const dateMap={};
   entries.forEach(e=>{ if(!dateMap[e.date]) dateMap[e.date]=[]; dateMap[e.date].push(e); });
   const dates=Object.keys(dateMap).sort((a,b)=>b.localeCompare(a));
+
   cont.innerHTML=dates.map(d=>{
-    const dayTotal=dateMap[d].filter(e=>e.type!=='nap').reduce((s,e)=>s+e.duration,0);
     const sessions=dateMap[d];
-    return `<div style="margin-bottom:10px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:8px">
-        ${fmtDate(d)}${dayTotal?' — <span style="color:#7C3AED">'+fmtDur(dayTotal)+' total</span>':''}
-        ${sessions.length>1?`<span style="background:#F3E8FF;color:#6D28D9;border-radius:20px;padding:1px 8px;font-size:10px">${sessions.length} sessions</span>`:''}
-        <span style="flex:1;height:1px;background:var(--border);display:block"></span>
+    const dayTotal=sessions.reduce((s,e)=>s+e.duration,0);
+    const napMins=sessions.filter(e=>e.type==='nap').reduce((s,e)=>s+e.duration,0);
+    const sleepMins=dayTotal-napMins;
+    return `<div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span>${fmtDate(d)}</span>
+        <span style="color:#5C6BC0;font-weight:800">${fmtDur(dayTotal)} total</span>
+        ${napMins?`<span style="color:var(--text2);font-weight:400">${fmtDur(sleepMins)} sleep + ${fmtDur(napMins)} nap</span>`:''}
+        ${sessions.length>1?`<span style="background:#F3E8FF;color:#6D28D9;border-radius:20px;padding:1px 8px;font-size:10px;font-weight:700">${sessions.length} sessions</span>`:''}
+        <span style="flex:1;height:1px;background:var(--border);display:block;min-width:16px"></span>
       </div>
-      ${sessions.map(e=>`<div class="tx-item">
-        <div class="tx-icon" style="background:var(--info-bg)">${SLEEP_ICON[e.type]||'🌙'}</div>
+      ${sessions.map(e=>`<div class="tx-item" style="margin-bottom:6px">
+        <div class="tx-icon" style="background:${SLEEP_BG[e.type]||'#E8EAF6'}">${SLEEP_SVG[e.type]||SLEEP_SVG.night}</div>
         <div class="tx-info">
-          <div class="tx-title">${{night:'Night Sleep',split:'Split Sleep',nap:'Nap'}[e.type]||'Sleep'} · ${fmtDur(e.duration)}</div>
-          <div class="tx-sub">${e.bedtime} → ${e.waketime} · ${'⭐'.repeat(e.quality||0)||'no rating'} · ${cap(e.disturbance||'no disturbance')}</div>
+          <div class="tx-title">${SLEEP_LABEL[e.type]||'Sleep'} · <strong>${fmtDur(e.duration)}</strong></div>
+          <div class="tx-sub" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span>${e.bedtime} → ${e.waketime}</span>
+            <span style="display:flex;align-items:center;gap:1px">${starsHtml(e.quality||0)}</span>
+            ${e.disturbance&&e.disturbance!=='none'?`<span>${cap(e.disturbance)}</span>`:''}
+          </div>
+          ${e.notes?`<div style="font-size:11px;color:var(--text2);margin-top:2px">${esc(e.notes)}</div>`:''}
         </div>
-        <button class="btn btn-danger btn-icon" style="margin-left:8px" onclick="deleteSleep('${e.id}')">🗑</button>
+        <div style="display:flex;gap:4px;margin-left:8px">
+          <button class="btn btn-ghost btn-icon" onclick="openSleepModal('${e.id}')" title="Edit">${SVG_EDIT}</button>
+          <button class="btn btn-danger btn-icon" onclick="deleteSleep('${e.id}')" title="Delete">${SVG_TRASH}</button>
+        </div>
       </div>`).join('')}
     </div>`;
   }).join('');
 }
-function openSleepModal(){ sleepStars=0; document.getElementById('sl_date').value=today(); document.getElementById('sl_bed').value=S.goals.bedtime||'22:30'; document.getElementById('sl_wake').value='06:30'; document.getElementById('sl_notes').value=''; updateStars(0); openModal('sleepModal'); }
+
+function openSleepModal(id){
+  editSleepId=id||null;
+  const titleEl=document.getElementById('sleepModalTitle');
+  if(titleEl) titleEl.textContent=id?'Edit Sleep':'Log Sleep';
+  sleepStars=0;
+  if(id){
+    const s=S.sleeps.find(x=>x.id===id); if(!s) return;
+    document.getElementById('sl_date').value=s.date;
+    document.getElementById('sl_bed').value=s.bedtime;
+    document.getElementById('sl_wake').value=s.waketime;
+    document.getElementById('sl_type').value=s.type||'night';
+    document.getElementById('sl_dist').value=s.disturbance||'none';
+    document.getElementById('sl_notes').value=s.notes||'';
+    sleepStars=s.quality||0;
+  } else {
+    document.getElementById('sl_date').value=today();
+    document.getElementById('sl_bed').value=S.goals.bedtime||'22:30';
+    document.getElementById('sl_wake').value='06:30';
+    document.getElementById('sl_type').value='night';
+    document.getElementById('sl_dist').value='none';
+    document.getElementById('sl_notes').value='';
+  }
+  updateStars(sleepStars);
+  openModal('sleepModal');
+}
 function pickStar(n){ sleepStars=n; updateStars(n); }
 function updateStars(n){ document.querySelectorAll('#sl_stars .star').forEach((s,i)=>s.classList.toggle('active',i<n)); }
 function saveSleep(){
@@ -1234,8 +1281,10 @@ function saveSleep(){
   if(!date||!bed||!wake){toast('Fill all fields','error');return;}
   const [bh,bm]=bed.split(':').map(Number),[wh,wm]=wake.split(':').map(Number);
   let dur=(wh*60+wm)-(bh*60+bm); if(dur<0) dur+=1440;
-  S.sleeps.unshift({id:uid(),date,bedtime:bed,waketime:wake,duration:dur,quality:sleepStars,type:document.getElementById('sl_type').value,disturbance:document.getElementById('sl_dist').value,notes:document.getElementById('sl_notes').value.trim(),ts:Date.now()});
-  persist(); closeModal('sleepModal'); renderAll(); toast('😴 Sleep logged! '+fmtDur(dur));
+  const entry={id:editSleepId||uid(),date,bedtime:bed,waketime:wake,duration:dur,quality:sleepStars,type:document.getElementById('sl_type').value,disturbance:document.getElementById('sl_dist').value,notes:document.getElementById('sl_notes').value.trim(),ts:Date.now()};
+  if(editSleepId){const i=S.sleeps.findIndex(x=>x.id===editSleepId);if(i>-1) S.sleeps[i]=entry; editSleepId=null;}
+  else S.sleeps.unshift(entry);
+  persist(); closeModal('sleepModal'); renderAll(); toast('Sleep saved! '+fmtDur(dur));
 }
 function deleteSleep(id){ if(!confirm('Delete?')) return; S.sleeps=S.sleeps.filter(s=>s.id!==id); persist(); renderSleepLog(); toast('Deleted'); }
 
@@ -1284,8 +1333,8 @@ function renderGymContent(){
         <div class="tx-sub">${w.exercises.length} exercise${w.exercises.length!==1?'s':''} · ${w.exercises.reduce((s,e)=>s+(e.sets||0),0)} total sets</div>
       </div>
       <div style="margin-left:auto;display:flex;gap:6px">
-        <button class="btn btn-ghost btn-icon" onclick="viewWorkout('${w.id}')">👁</button>
-        <button class="btn btn-danger btn-icon" onclick="deleteWorkout('${w.id}')">🗑</button>
+        <button class="btn btn-ghost btn-icon" onclick="viewWorkout('${w.id}')" title="View">${SVG_EDIT}</button>
+        <button class="btn btn-danger btn-icon" onclick="deleteWorkout('${w.id}')" title="Delete">${SVG_TRASH}</button>
       </div>
       <div style="width:100%;padding-left:48px">
         ${w.exercises.map(e=>`<div style="font-size:12px;color:var(--text2);margin-bottom:2px">• <strong>${e.name}</strong> — ${e.sets}×${e.reps}${e.weight?' @ '+e.weight+'kg':''}</div>`).join('')}
@@ -1301,7 +1350,7 @@ function renderGymContent(){
         <div class="tx-title">${WORKOUT_LABELS[w.workoutType]||w.workoutType}</div>
         <div class="tx-sub">${fmtDate(w.date)} · ${w.exercises.length} exercises · ${w.exercises.reduce((s,e)=>s+(e.sets||0),0)} sets</div>
       </div>
-      <button class="btn btn-danger btn-icon" onclick="deleteWorkout('${w.id}')">🗑</button>
+      <button class="btn btn-danger btn-icon" onclick="deleteWorkout('${w.id}')" title="Delete">${SVG_TRASH}</button>
     </div>`).join('') : '<div style="color:var(--text2);font-size:13px;text-align:center;padding:12px">No past workouts yet</div>';
 
   document.getElementById('bodyTabContent').innerHTML=`
@@ -1424,7 +1473,7 @@ function bodyNoteHTML(n,cfg){
       <div class="tl-meta">${fields.map(([k,v])=>`<strong>${k.replace('b_','').replace(/_/g,' ')}:</strong> ${v} &nbsp;`).join('')}</div>
       ${n.notes?`<div class="tl-meta" style="font-style:italic;margin-top:2px">"${esc(n.notes)}"</div>`:''}
     </div>
-    <button class="btn btn-danger btn-icon" onclick="deleteBodyNote('${n.id}')">🗑</button>
+    <button class="btn btn-danger btn-icon" onclick="deleteBodyNote('${n.id}')" title="Delete">${SVG_TRASH}</button>
   </div>`;
 }
 function openBodyModal(tab){
