@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Mono:wght@400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lucide@0.441.0/dist/umd/lucide.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
@@ -48,7 +49,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 .sidebar-logo em { color: var(--accent); font-style: normal; }
 .sidebar-nav { flex: 1; display: flex; flex-direction: column; padding: 12px 0; gap: 2px; }
 .nav-btn { background: none; border: none; border-left: 3px solid transparent; color: #8A8A80; font-family: var(--font-body); font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 13px 20px; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 12px; transition: background 0.15s, color 0.15s, border-color 0.15s; border-radius: 0; width: 100%; }
-.nav-btn .nav-icon { font-size: 17px; width: 22px; text-align: center; flex-shrink: 0; }
+.nav-btn .nav-icon { width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.nav-btn .nav-icon svg { width: 16px; height: 16px; }
 .nav-btn:hover { background: rgba(255,255,255,0.05); color: #F4F7F4; }
 .nav-btn.active { background: rgba(46,125,50,0.14); color: var(--accent); border-left-color: var(--accent); }
 .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 10px; font-size: 11px; color: #6B6860; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -58,7 +60,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 300; background: var(--text); border-top: 1px solid rgba(255,255,255,0.08); padding: 0; padding-bottom: env(safe-area-inset-bottom); }
 .bottom-nav-inner { display: flex; align-items: stretch; height: 60px; }
 .bottom-nav-btn { flex: 1; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #6B6860; font-family: var(--font-body); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; transition: color 0.15s; padding: 0 4px; }
-.bottom-nav-btn .bn-icon { font-size: 20px; display: block; }
+.bottom-nav-btn .bn-icon { width: 22px; height: 22px; display: block; }
+.bottom-nav-btn .bn-icon svg { width: 22px; height: 22px; }
 .bottom-nav-btn.active { color: var(--accent); }
 .bottom-nav-btn:active { opacity: 0.7; }
 
@@ -272,11 +275,26 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 <!-- Bottom nav (mobile) -->
 <nav class="bottom-nav" id="bottom-nav">
   <div class="bottom-nav-inner">
-    <button class="bottom-nav-btn active" data-page="dashboard"><span class="bn-icon">📊</span>Home</button>
-    <button class="bottom-nav-btn" data-page="food"><span class="bn-icon">🍛</span>Food</button>
-    <button class="bottom-nav-btn" data-page="sleep"><span class="bn-icon">😴</span>Sleep</button>
-    <button class="bottom-nav-btn" data-page="body"><span class="bn-icon">✨</span>Care</button>
-    <button class="bottom-nav-btn" data-page="insights"><span class="bn-icon">📈</span>Insights</button>
+    <button class="bottom-nav-btn active" data-page="dashboard">
+      <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+      Home
+    </button>
+    <button class="bottom-nav-btn" data-page="food">
+      <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></span>
+      Food
+    </button>
+    <button class="bottom-nav-btn" data-page="sleep">
+      <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span>
+      Sleep
+    </button>
+    <button class="bottom-nav-btn" data-page="body">
+      <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+      Care
+    </button>
+    <button class="bottom-nav-btn" data-page="insights">
+      <span class="bn-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+      Insights
+    </button>
   </div>
 </nav>
 
@@ -284,12 +302,30 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">Health<em>ify</em></div>
   <nav class="sidebar-nav">
-    <button class="nav-btn active" data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</button>
-    <button class="nav-btn" data-page="food"><span class="nav-icon">🍛</span> Food & Protein</button>
-    <button class="nav-btn" data-page="sleep"><span class="nav-icon">😴</span> Sleep</button>
-    <button class="nav-btn" data-page="body"><span class="nav-icon">✨</span> Body Care</button>
-    <button class="nav-btn" data-page="insights"><span class="nav-icon">📈</span> Insights</button>
-    <button class="nav-btn" data-page="settings"><span class="nav-icon">⚙️</span> Goals</button>
+    <button class="nav-btn active" data-page="dashboard">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
+      Dashboard
+    </button>
+    <button class="nav-btn" data-page="food">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg></span>
+      Food & Protein
+    </button>
+    <button class="nav-btn" data-page="sleep">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span>
+      Sleep
+    </button>
+    <button class="nav-btn" data-page="body">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+      Body Care
+    </button>
+    <button class="nav-btn" data-page="insights">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
+      Insights
+    </button>
+    <button class="nav-btn" data-page="settings">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+      Goals
+    </button>
   </nav>
   <div class="sidebar-footer">
     <div class="sync-dot" id="sync-dot"></div>
@@ -302,30 +338,38 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 <!-- ════ DASHBOARD ════ -->
 <div class="page active" id="page-dashboard">
   <div class="container">
-    <div class="section-title">Good <span id="greeting"></span>! 💚</div>
+    <div class="section-title">Good <span id="greeting"></span>!</div>
     <div class="section-sub" id="todayDateLabel"></div>
 
     <div class="summary-grid">
       <div class="summary-card">
-        <div class="summary-icon" style="background:var(--accent-light)">🍽️</div>
+        <div class="summary-icon" style="background:var(--accent-light)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v4H3z"/><path d="M3 7v13a2 2 0 002 2h14a2 2 0 002-2V7"/><path d="M9 11h6M9 15h4"/></svg>
+        </div>
         <div class="summary-lbl">Food Spend</div>
         <div class="summary-val" id="d_foodSpend">₹0</div>
         <div class="text-xs text-muted" id="d_foodBudget">of ₹0 budget</div>
       </div>
       <div class="summary-card">
-        <div class="summary-icon" style="background:var(--info-bg)">💪</div>
+        <div class="summary-icon" style="background:var(--info-bg)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 8h12M6 16h12"/></svg>
+        </div>
         <div class="summary-lbl">Protein Today</div>
         <div class="summary-val blue" id="d_protein">0g</div>
         <div class="text-xs text-muted" id="d_proteinGoal">of 0g goal</div>
       </div>
       <div class="summary-card">
-        <div class="summary-icon" style="background:var(--purple-bg)">😴</div>
+        <div class="summary-icon" style="background:var(--purple-bg)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </div>
         <div class="summary-lbl">Last Sleep</div>
         <div class="summary-val purple" id="d_sleep">–</div>
         <div class="text-xs text-muted" id="d_sleepQuality"></div>
       </div>
       <div class="summary-card">
-        <div class="summary-icon" style="background:var(--success-bg)">✅</div>
+        <div class="summary-icon" style="background:var(--success-bg)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+        </div>
         <div class="summary-lbl">Body Care</div>
         <div class="summary-val green" id="d_bodyCare">0/6</div>
         <div class="text-xs text-muted">tasks done today</div>
@@ -335,7 +379,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     <!-- Checklist -->
     <div class="card mb-4">
       <div class="flex items-center mb-4" style="justify-content:space-between">
-        <div class="card-title" style="margin-bottom:0">📋 Today's Body Care</div>
+        <div class="card-title" style="margin-bottom:0;display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M3 6h18v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"/><path d="M9 12l2 2 4-4"/></svg> Today's Body Care</div>
         <span class="text-xs text-muted" id="d_checkScore"></span>
       </div>
       <div class="checklist-grid" id="d_checklistGrid"></div>
@@ -345,13 +389,13 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     <div class="analytics-grid mb-4">
       <div class="card">
         <div class="flex items-center mb-4" style="justify-content:space-between">
-          <div class="card-title" style="margin-bottom:0">🍛 Today's Meals</div>
+          <div class="card-title" style="margin-bottom:0;display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> Today's Meals</div>
           <button class="btn btn-ghost text-sm" style="padding:6px 14px" onclick="nav('food')">Add →</button>
         </div>
         <div class="tx-list" id="d_mealList"></div>
       </div>
       <div class="card">
-        <div class="card-title">💪 Protein Progress</div>
+        <div class="card-title" style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 8h12M6 16h12"/></svg> Protein Progress</div>
         <div class="protein-hero">
           <div class="protein-circle">
             <svg width="90" height="90" viewBox="0 0 90 90">
@@ -371,7 +415,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     <!-- Last sleep -->
     <div class="card mb-4">
       <div class="flex items-center mb-4" style="justify-content:space-between">
-        <div class="card-title" style="margin-bottom:0">😴 Last Night's Sleep</div>
+        <div class="card-title" style="margin-bottom:0;display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg> Last Night's Sleep</div>
         <button class="btn btn-ghost text-sm" style="padding:6px 14px" onclick="nav('sleep')">Log →</button>
       </div>
       <div id="d_sleepSummary"><div class="empty-state" style="padding:16px"><div class="empty-icon" style="font-size:28px">🌙</div><p>No sleep logged yet</p></div></div>
@@ -379,13 +423,13 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 
     <!-- Streak -->
     <div class="card mb-4">
-      <div class="card-title">🔥 30-Day Logging Streak</div>
+      <div class="card-title" style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c0 6-6 8-6 14a6 6 0 0012 0c0-6-6-8-6-14z"/><path d="M12 12c0 3-2 4-2 6a2 2 0 004 0c0-2-2-3-2-6z"/></svg> 30-Day Logging Streak</div>
       <div class="streak-row" id="d_streakRow"></div>
     </div>
 
     <!-- Suggestions -->
     <div class="card">
-      <div class="card-title">💡 Smart Suggestions</div>
+      <div class="card-title" style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Smart Suggestions</div>
       <div class="sug-list" id="d_suggestions"></div>
     </div>
   </div>
@@ -394,12 +438,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 <!-- ════ FOOD & PROTEIN ════ -->
 <div class="page" id="page-food">
   <div class="container">
-    <div class="section-title">🍛 Food & Protein</div>
+    <div class="section-title" style="display:flex;align-items:center;gap:10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg> Food & Protein</div>
     <div class="section-sub">Track meals, spend & protein intake</div>
 
     <!-- Protein bar -->
     <div class="card mb-4">
-      <div class="card-title">💪 Today's Protein</div>
+      <div class="card-title" style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 8h12M6 16h12"/></svg> Today's Protein</div>
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px">
         <span id="f_proteinDone">0g consumed</span><span id="f_proteinGoalLbl">Goal: 0g</span>
       </div>
@@ -429,7 +473,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 <!-- ════ SLEEP ════ -->
 <div class="page" id="page-sleep">
   <div class="container">
-    <div class="section-title">😴 Sleep Tracker</div>
+    <div class="section-title" style="display:flex;align-items:center;gap:10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg> Sleep Tracker</div>
     <div class="section-sub">Monitor your sleep cycle & quality</div>
 
     <div class="summary-grid">
@@ -449,12 +493,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 <!-- ════ BODY CARE ════ -->
 <div class="page" id="page-body">
   <div class="container">
-    <div class="section-title">✨ Body Care</div>
+    <div class="section-title" style="display:flex;align-items:center;gap:10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Body Care</div>
     <div class="section-sub">Daily grooming & care habits</div>
 
     <div class="card mb-4">
       <div class="flex items-center mb-4" style="justify-content:space-between">
-        <div class="card-title" style="margin-bottom:0">📋 Today's Checklist</div>
+        <div class="card-title" style="margin-bottom:0;display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M3 6h18v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"/><path d="M9 12l2 2 4-4"/></svg> Today's Checklist</div>
         <span class="text-xs text-muted" id="bc_score"></span>
       </div>
       <div class="checklist-grid" id="bc_checklist"></div>
@@ -478,7 +522,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 <!-- ════ INSIGHTS ════ -->
 <div class="page" id="page-insights">
   <div class="container">
-    <div class="section-title">📈 Insights</div>
+    <div class="section-title" style="display:flex;align-items:center;gap:10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Insights</div>
     <div class="section-sub">Trends across all your health habits</div>
 
     <div class="filters-row">
@@ -511,11 +555,11 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 <!-- ════ GOALS / SETTINGS ════ -->
 <div class="page" id="page-settings">
   <div class="container" style="max-width:640px">
-    <div class="section-title">⚙️ Goals & Settings</div>
+    <div class="section-title" style="display:flex;align-items:center;gap:10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg> Goals & Settings</div>
     <div class="section-sub">Set your daily health targets</div>
 
     <div class="card mb-4">
-      <div class="card-title">🍛 Food Budget</div>
+      <div class="card-title" style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Food Budget</div>
       <div class="form-grid cols3">
         <div class="form-group"><label class="form-label">Daily Limit (₹)</label><input class="form-input" type="number" id="s_daily" placeholder="300"></div>
         <div class="form-group"><label class="form-label">Monthly Limit (₹)</label><input class="form-input" type="number" id="s_monthly" placeholder="6000"></div>
@@ -524,7 +568,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     </div>
 
     <div class="card mb-4">
-      <div class="card-title">💪 Protein Goal</div>
+      <div class="card-title" style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--info)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16M18 4v16M6 8h12M6 16h12"/></svg> Protein Goal</div>
       <div class="form-grid cols3">
         <div class="form-group"><label class="form-label">Daily Goal (g)</label><input class="form-input" type="number" id="s_protein" placeholder="60"></div>
         <div class="form-group"><label class="form-label">Weight (kg)</label><input class="form-input" type="number" id="s_weight" placeholder="65"></div>
@@ -543,7 +587,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     </div>
 
     <div class="card mb-4">
-      <div class="card-title">😴 Sleep Goal</div>
+      <div class="card-title" style="display:flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> Sleep Goal</div>
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Target Hours</label><input class="form-input" type="number" id="s_sleepGoal" placeholder="8" step="0.5"></div>
         <div class="form-group"><label class="form-label">Preferred Bedtime</label><input class="form-input" type="time" id="s_bedtime" value="22:30"></div>
