@@ -511,12 +511,13 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
       <button class="tab-btn" onclick="setBodyTab('teeth',this)">🦷 Teeth</button>
       <button class="tab-btn" onclick="setBodyTab('hair',this)">💇 Hair</button>
       <button class="tab-btn" onclick="setBodyTab('face',this)">🧴 Face</button>
+      <button class="tab-btn" onclick="setBodyTab('gym',this)">🏋️ Gym</button>
     </div>
 
     <div id="bodyTabContent"></div>
 
-    <div class="flex" style="justify-content:flex-end;margin-top:14px">
-      <button class="btn btn-primary" onclick="openBodyModal()">+ Add Note</button>
+    <div class="flex" style="justify-content:flex-end;margin-top:14px" id="bodyAddBtn">
+      <button class="btn btn-primary" id="bodyAddBtnInner" onclick="openBodyModal()">+ Add Note</button>
     </div>
   </div>
 </div>
@@ -676,6 +677,48 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
   </div>
 </div>
 
+<!-- ════ WORKOUT MODAL ════ -->
+<div class="modal-overlay" id="workoutModal">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-title">🏋️ Log Workout</div>
+    <div class="form-grid cols2" style="margin-bottom:12px">
+      <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="wk_date"></div>
+      <div class="form-group"><label class="form-label">Time of Day</label>
+        <select class="form-select" id="wk_time">
+          <option value="morning">🌅 Morning</option>
+          <option value="evening">🌆 Evening</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">Workout Type</label>
+      <select class="form-select" id="wk_type" onchange="updateExSuggestions()">
+        <option value="upper">Upper Body</option>
+        <option value="lower">Lower Body</option>
+        <option value="cardio">Cardio</option>
+        <option value="core">Core</option>
+        <option value="fullbody">Full Body</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:8px">
+      <label class="form-label">Quick Add Exercise</label>
+      <div class="chip-row" id="wk_exSuggestions" style="flex-wrap:wrap"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:4px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <label class="form-label" style="margin:0">Exercises <span style="font-size:10px;color:var(--text2)">(Sets × Reps @ kg)</span></label>
+        <button class="btn btn-ghost text-sm" style="padding:4px 10px" onclick="addExRow()">+ Add Row</button>
+      </div>
+      <div id="wk_exList"></div>
+    </div>
+    <div class="form-group" style="margin-bottom:4px"><label class="form-label">Notes</label><textarea class="form-textarea" id="wk_notes" style="min-height:50px" placeholder="How was the session?"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('workoutModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveWorkout()">Save Workout</button>
+    </div>
+  </div>
+</div>
+
 <!-- ════ SLEEP MODAL ════ -->
 <div class="modal-overlay" id="sleepModal">
   <div class="modal">
@@ -698,7 +741,11 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
     </div>
     <div class="form-grid" style="margin-bottom:12px">
       <div class="form-group"><label class="form-label">Type</label>
-        <select class="form-select" id="sl_type"><option value="night">🌙 Night Sleep</option><option value="nap">😪 Nap</option></select>
+        <select class="form-select" id="sl_type">
+          <option value="night">🌙 Night Sleep</option>
+          <option value="split">🌗 Split / 2nd Sleep</option>
+          <option value="nap">😪 Short Nap</option>
+        </select>
       </div>
       <div class="form-group"><label class="form-label">Disturbance</label>
         <select class="form-select" id="sl_dist">
@@ -757,8 +804,9 @@ const _DOC = _db.collection('healthify').doc('main');
 
 // ── State ──
 let S = {
-  meals:[], sleeps:[], bodyNotes:[], checklist:{}, groceries:[],
-  goals:{ daily:300, monthly:6000, alertPct:80, protein:60, weight:65, sleepGoal:8, bedtime:'22:30' }
+  meals:[], sleeps:[], bodyNotes:[], checklist:{}, groceries:[], workouts:[],
+  goals:{ daily:300, monthly:6000, alertPct:80, protein:60, weight:65, sleepGoal:8, bedtime:'22:30',
+    gymSchedule:['rest','upper','upper','lower','upper','upper','lower'] }
 };
 let editMealId=null, activeMealType='breakfast', activeMood='', sleepStars=0, activeBodyCateg='bath';
 let activeFoodTab='all', activeBodyTab='bath';
@@ -825,14 +873,14 @@ function setSyncStatus(s) {
 }
 async function persist() {
   setSyncStatus('syncing');
-  try { await _DOC.set({meals:S.meals, sleeps:S.sleeps, bodyNotes:S.bodyNotes, checklist:S.checklist, goals:S.goals, groceries:S.groceries}); setSyncStatus('ok'); }
+  try { await _DOC.set({meals:S.meals, sleeps:S.sleeps, bodyNotes:S.bodyNotes, checklist:S.checklist, goals:S.goals, groceries:S.groceries, workouts:S.workouts}); setSyncStatus('ok'); }
   catch(e) { setSyncStatus('error'); toast('Sync error: '+e.message,'error'); }
 }
 async function loadState() {
   setSyncStatus('syncing');
   try {
     const snap = await _DOC.get();
-    if(snap.exists) { const d=snap.data(); if(d.meals) S.meals=d.meals; if(d.sleeps) S.sleeps=d.sleeps; if(d.bodyNotes) S.bodyNotes=d.bodyNotes; if(d.checklist) S.checklist=d.checklist; if(d.goals) S.goals={...S.goals,...d.goals}; if(d.groceries) S.groceries=d.groceries; }
+    if(snap.exists) { const d=snap.data(); if(d.meals) S.meals=d.meals; if(d.sleeps) S.sleeps=d.sleeps; if(d.bodyNotes) S.bodyNotes=d.bodyNotes; if(d.checklist) S.checklist=d.checklist; if(d.goals) S.goals={...S.goals,...d.goals,gymSchedule:d.goals?.gymSchedule||S.goals.gymSchedule}; if(d.groceries) S.groceries=d.groceries; if(d.workouts) S.workouts=d.workouts; }
     setSyncStatus('ok');
   } catch(e) { setSyncStatus('error'); }
   init();
@@ -1132,28 +1180,51 @@ function saveGrocery(){
 function deleteGrocery(id){ if(!confirm('Delete this entry?')) return; S.groceries=S.groceries.filter(g=>g.id!==id); persist(); renderAll(); toast('Deleted'); }
 
 // ══════════════════════════════ SLEEP
+const SLEEP_ICON = {night:'🌙', split:'🌗', nap:'😪'};
 function renderSleepLog(){
   const entries=[...S.sleeps].sort((a,b)=>b.ts-a.ts);
-  const last7=entries.filter(e=>getLastN(7).includes(e.date)&&e.type!=='nap');
-  const avgDur=last7.length?last7.reduce((s,e)=>s+e.duration,0)/last7.length:0;
-  const avgQual=last7.length?last7.reduce((s,e)=>s+(e.quality||0),0)/last7.length:0;
-  const best=entries.length?Math.max(...entries.map(e=>e.duration)):0;
-  document.getElementById('sl_avg').textContent=avgDur?fmtDur(avgDur):'–';
+  // For stats: per-day total of night+split sessions
+  const last7days=getLastN(7);
+  const dayTotals=last7days.map(d=>{
+    const dayEntries=entries.filter(e=>e.date===d&&e.type!=='nap');
+    return dayEntries.reduce((s,e)=>s+e.duration,0);
+  }).filter(d=>d>0);
+  const avgDur=dayTotals.length?dayTotals.reduce((s,d)=>s+d,0)/dayTotals.length:0;
+  const last7entries=entries.filter(e=>last7days.includes(e.date)&&e.type!=='nap');
+  const avgQual=last7entries.length?last7entries.reduce((s,e)=>s+(e.quality||0),0)/last7entries.length:0;
+  // Best single day total
+  const byDate={};
+  entries.filter(e=>e.type!=='nap').forEach(e=>{ byDate[e.date]=(byDate[e.date]||0)+e.duration; });
+  const best=Object.values(byDate).length?Math.max(...Object.values(byDate)):0;
+  document.getElementById('sl_avg').textContent=avgDur?fmtDur(Math.round(avgDur)):'–';
   document.getElementById('sl_qual').textContent=avgQual?avgQual.toFixed(1)+'⭐':'–';
   document.getElementById('sl_best').textContent=best?fmtDur(best):'–';
-  document.getElementById('sl_count').textContent=entries.length;
+  document.getElementById('sl_count').textContent=Object.keys(byDate).length;
   const cont=document.getElementById('sl_logList');
   if(!entries.length){cont.innerHTML='<div class="empty-state"><div class="empty-icon">🌙</div><p>No sleep logged yet</p></div>';return;}
-  cont.innerHTML=entries.map(e=>`
-    <div class="tx-item">
-      <div class="tx-icon" style="background:var(--info-bg)">${e.type==='nap'?'😪':'🌙'}</div>
-      <div class="tx-info">
-        <div class="tx-title">${fmtDur(e.duration)} sleep · ${'⭐'.repeat(e.quality||0)||'–'}</div>
-        <div class="tx-sub">${e.bedtime} → ${e.waketime} · ${fmtDate(e.date)} · ${cap(e.disturbance||'')}</div>
+  // Group by date
+  const dateMap={};
+  entries.forEach(e=>{ if(!dateMap[e.date]) dateMap[e.date]=[]; dateMap[e.date].push(e); });
+  const dates=Object.keys(dateMap).sort((a,b)=>b.localeCompare(a));
+  cont.innerHTML=dates.map(d=>{
+    const dayTotal=dateMap[d].filter(e=>e.type!=='nap').reduce((s,e)=>s+e.duration,0);
+    const sessions=dateMap[d];
+    return `<div style="margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:8px">
+        ${fmtDate(d)}${dayTotal?' — <span style="color:#7C3AED">'+fmtDur(dayTotal)+' total</span>':''}
+        ${sessions.length>1?`<span style="background:#F3E8FF;color:#6D28D9;border-radius:20px;padding:1px 8px;font-size:10px">${sessions.length} sessions</span>`:''}
+        <span style="flex:1;height:1px;background:var(--border);display:block"></span>
       </div>
-      <div class="tx-amount blue">${fmtDur(e.duration)}</div>
-      <button class="btn btn-danger btn-icon" style="margin-left:8px" onclick="deleteSleep('${e.id}')">🗑</button>
-    </div>`).join('');
+      ${sessions.map(e=>`<div class="tx-item">
+        <div class="tx-icon" style="background:var(--info-bg)">${SLEEP_ICON[e.type]||'🌙'}</div>
+        <div class="tx-info">
+          <div class="tx-title">${{night:'Night Sleep',split:'Split Sleep',nap:'Nap'}[e.type]||'Sleep'} · ${fmtDur(e.duration)}</div>
+          <div class="tx-sub">${e.bedtime} → ${e.waketime} · ${'⭐'.repeat(e.quality||0)||'no rating'} · ${cap(e.disturbance||'no disturbance')}</div>
+        </div>
+        <button class="btn btn-danger btn-icon" style="margin-left:8px" onclick="deleteSleep('${e.id}')">🗑</button>
+      </div>`).join('')}
+    </div>`;
+  }).join('');
 }
 function openSleepModal(){ sleepStars=0; document.getElementById('sl_date').value=today(); document.getElementById('sl_bed').value=S.goals.bedtime||'22:30'; document.getElementById('sl_wake').value='06:30'; document.getElementById('sl_notes').value=''; updateStars(0); openModal('sleepModal'); }
 function pickStar(n){ sleepStars=n; updateStars(n); }
@@ -1168,6 +1239,156 @@ function saveSleep(){
 }
 function deleteSleep(id){ if(!confirm('Delete?')) return; S.sleeps=S.sleeps.filter(s=>s.id!==id); persist(); renderSleepLog(); toast('Deleted'); }
 
+// ══════════════════════════════ GYM
+const WORKOUT_LABELS = {upper:'Upper Body',lower:'Lower Body',cardio:'Cardio',fullbody:'Full Body',rest:'Rest Day',core:'Core'};
+const WORKOUT_COLOR  = {upper:'#1565C0',lower:'#2E7D32',cardio:'#C62828',fullbody:'#6D28D9',rest:'#78909C',core:'#E65100'};
+const WORKOUT_BG     = {upper:'#E3F2FD',lower:'#E8F5E9',cardio:'#FFEBEE',fullbody:'#F3E8FF',rest:'#ECEFF1',core:'#FFF3E0'};
+const DAYS_SHORT     = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const EXERCISE_DB = {
+  upper:['Bench Press','Incline Press','Shoulder Press','Lat Pulldown','Seated Row','Barbell Row','Bicep Curl','Hammer Curl','Tricep Pushdown','Overhead Tricep','Lateral Raise','Front Raise','Face Pull','Cable Fly','Push-up','Pull-up','Dip'],
+  lower:['Squat','Leg Press','Lunges','Romanian Deadlift','Leg Curl','Leg Extension','Calf Raise','Hip Thrust','Sumo Squat','Step-up','Deadlift'],
+  cardio:['Treadmill','Cycling','Jump Rope','Stairmill','Elliptical','HIIT Run','Swimming'],
+  core:['Plank','Crunch','Leg Raise','Russian Twist','Cable Crunch','Ab Wheel','Side Plank','Hollow Hold'],
+  fullbody:['Deadlift','Clean & Press','Burpee','Kettlebell Swing','Thruster','Box Jump','Battle Rope']
+};
+
+let gymExRows=[];
+
+function todayGymType(){
+  const dow=new Date().getDay();
+  return (S.goals.gymSchedule||[])[dow]||'rest';
+}
+
+function renderGymContent(){
+  const t=today();
+  const todayType=todayGymType();
+  const todayWorkouts=S.workouts.filter(w=>w.date===t);
+  const recent=[...S.workouts].sort((a,b)=>b.ts-a.ts).slice(0,20);
+
+  // Weekly schedule strip
+  const scheduleHTML=DAYS_SHORT.map((d,i)=>{
+    const type=(S.goals.gymSchedule||[])[i]||'rest';
+    const isToday=i===new Date().getDay();
+    return `<div style="text-align:center;flex:1;cursor:pointer" onclick="cycleGymDay(${i})">
+      <div style="font-size:10px;color:var(--text2);margin-bottom:3px">${d}</div>
+      <div style="padding:4px 2px;border-radius:8px;font-size:10px;font-weight:700;background:${isToday?WORKOUT_BG[type]:'var(--bg2)'};color:${isToday?WORKOUT_COLOR[type]:'var(--text2)'};border:${isToday?'2px solid '+WORKOUT_COLOR[type]:'1px solid var(--border)'}">${type==='rest'?'Rest':type==='upper'?'Upper':type==='lower'?'Lower':type==='cardio'?'Cardio':type==='core'?'Core':'Full'}</div>
+    </div>`;
+  }).join('');
+
+  // Today's logged workouts
+  const todayHTML=todayWorkouts.length ? todayWorkouts.map(w=>`
+    <div class="tx-item" style="flex-wrap:wrap;gap:6px">
+      <div class="tx-icon" style="background:${WORKOUT_BG[w.workoutType]||'#eee'}">${w.timeOfDay==='morning'?'🌅':'🌆'}</div>
+      <div class="tx-info">
+        <div class="tx-title">${WORKOUT_LABELS[w.workoutType]||w.workoutType} · ${w.timeOfDay==='morning'?'Morning':'Evening'}</div>
+        <div class="tx-sub">${w.exercises.length} exercise${w.exercises.length!==1?'s':''} · ${w.exercises.reduce((s,e)=>s+(e.sets||0),0)} total sets</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="btn btn-ghost btn-icon" onclick="viewWorkout('${w.id}')">👁</button>
+        <button class="btn btn-danger btn-icon" onclick="deleteWorkout('${w.id}')">🗑</button>
+      </div>
+      <div style="width:100%;padding-left:48px">
+        ${w.exercises.map(e=>`<div style="font-size:12px;color:var(--text2);margin-bottom:2px">• <strong>${e.name}</strong> — ${e.sets}×${e.reps}${e.weight?' @ '+e.weight+'kg':''}</div>`).join('')}
+      </div>
+    </div>`).join('') : `<div class="empty-state" style="padding:20px 0"><div class="empty-icon">🏋️</div><p>No workout logged today</p></div>`;
+
+  // Recent history (excluding today)
+  const historyEntries=[...S.workouts].filter(w=>w.date!==t).sort((a,b)=>b.ts-a.ts).slice(0,10);
+  const historyHTML=historyEntries.length ? historyEntries.map(w=>`
+    <div class="tx-item">
+      <div class="tx-icon" style="background:${WORKOUT_BG[w.workoutType]||'#eee'};font-size:13px">${w.timeOfDay==='morning'?'🌅':'🌆'}</div>
+      <div class="tx-info">
+        <div class="tx-title">${WORKOUT_LABELS[w.workoutType]||w.workoutType}</div>
+        <div class="tx-sub">${fmtDate(w.date)} · ${w.exercises.length} exercises · ${w.exercises.reduce((s,e)=>s+(e.sets||0),0)} sets</div>
+      </div>
+      <button class="btn btn-danger btn-icon" onclick="deleteWorkout('${w.id}')">🗑</button>
+    </div>`).join('') : '<div style="color:var(--text2);font-size:13px;text-align:center;padding:12px">No past workouts yet</div>';
+
+  document.getElementById('bodyTabContent').innerHTML=`
+    <div class="card mb-4">
+      <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>📅 Weekly Schedule</span>
+        <span style="font-size:11px;color:var(--text2);font-weight:400">Tap a day to cycle</span>
+      </div>
+      <div style="display:flex;gap:4px">${scheduleHTML}</div>
+    </div>
+    <div class="card mb-4">
+      <div class="card-title" style="display:flex;align-items:center;gap:8px">
+        <span style="background:${WORKOUT_BG[todayType]};color:${WORKOUT_COLOR[todayType]};padding:2px 10px;border-radius:20px;font-size:12px">${WORKOUT_LABELS[todayType]||'Rest'}</span>
+        Today's Workout
+      </div>
+      ${todayHTML}
+    </div>
+    <div class="card">
+      <div class="card-title">📋 Recent Workouts</div>
+      ${historyHTML}
+    </div>`;
+}
+
+function cycleGymDay(dow){
+  const types=['upper','lower','cardio','core','fullbody','rest'];
+  const sch=[...(S.goals.gymSchedule||['rest','upper','upper','lower','upper','upper','lower'])];
+  const cur=sch[dow]||'rest';
+  sch[dow]=types[(types.indexOf(cur)+1)%types.length];
+  S.goals.gymSchedule=sch;
+  persist(); renderGymContent();
+}
+
+function openWorkoutModal(){
+  gymExRows=[];
+  document.getElementById('wk_date').value=today();
+  document.getElementById('wk_time').value='morning';
+  const t=todayGymType();
+  document.getElementById('wk_type').value=t==='rest'?'upper':t;
+  document.getElementById('wk_notes').value='';
+  gymExRows=[];
+  renderExRows();
+  addExRow();
+  updateExSuggestions();
+  openModal('workoutModal');
+}
+
+function renderExRows(){
+  document.getElementById('wk_exList').innerHTML=gymExRows.map((r,i)=>`
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+      <input class="form-input" style="flex:2;min-width:0" placeholder="Exercise name" value="${r.name||''}" oninput="gymExRows[${i}].name=this.value">
+      <input class="form-input" style="width:52px" type="number" placeholder="Sets" min="1" value="${r.sets||''}" oninput="gymExRows[${i}].sets=+this.value">
+      <input class="form-input" style="width:52px" type="number" placeholder="Reps" min="1" value="${r.reps||''}" oninput="gymExRows[${i}].reps=+this.value">
+      <input class="form-input" style="width:58px" type="number" placeholder="kg" step="0.5" value="${r.weight||''}" oninput="gymExRows[${i}].weight=+this.value||0">
+      <button class="btn btn-danger btn-icon" onclick="removeExRow(${i})">✕</button>
+    </div>`).join('');
+}
+
+function addExRow(){ gymExRows.push({name:'',sets:3,reps:10,weight:0}); renderExRows(); }
+function removeExRow(i){ gymExRows.splice(i,1); renderExRows(); }
+
+function updateExSuggestions(){
+  const type=document.getElementById('wk_type').value;
+  const list=(EXERCISE_DB[type]||EXERCISE_DB.upper).slice(0,8);
+  document.getElementById('wk_exSuggestions').innerHTML=list.map(e=>`<div class="chip" onclick="quickAddEx('${e}')">${e}</div>`).join('');
+}
+
+function quickAddEx(name){
+  gymExRows.push({name,sets:3,reps:10,weight:0});
+  renderExRows();
+}
+
+function saveWorkout(){
+  const date=document.getElementById('wk_date').value;
+  if(!date){toast('Select date','error');return;}
+  const exercises=gymExRows.filter(r=>r.name.trim());
+  if(!exercises.length){toast('Add at least one exercise','error');return;}
+  S.workouts.unshift({id:uid(),date,timeOfDay:document.getElementById('wk_time').value,workoutType:document.getElementById('wk_type').value,exercises,notes:document.getElementById('wk_notes').value.trim(),ts:Date.now()});
+  persist(); closeModal('workoutModal'); renderGymContent(); toast('🏋️ Workout saved!');
+}
+
+function deleteWorkout(id){ if(!confirm('Delete workout?')) return; S.workouts=S.workouts.filter(w=>w.id!==id); persist(); renderGymContent(); toast('Deleted'); }
+
+function viewWorkout(id){
+  const w=S.workouts.find(x=>x.id===id); if(!w) return;
+  alert(`${WORKOUT_LABELS[w.workoutType]} — ${fmtDate(w.date)} ${w.timeOfDay}\n\n`+w.exercises.map(e=>`${e.name}: ${e.sets}×${e.reps}${e.weight?' @ '+e.weight+'kg':''}`).join('\n')+(w.notes?'\n\nNotes: '+w.notes:''));
+}
+
 // ══════════════════════════════ BODY CARE
 function renderBodyTab(){
   renderChecklist('bc_checklist');
@@ -1176,8 +1397,17 @@ function renderBodyTab(){
   if(document.getElementById('bc_score')) document.getElementById('bc_score').textContent=done+'/'+CHECKLIST.length+' done today';
   renderBodyTabContent(activeBodyTab);
 }
-function setBodyTab(tab,el){ activeBodyTab=tab; document.querySelectorAll('#bodyTabs .tab-btn').forEach(t=>t.classList.remove('active')); el.classList.add('active'); renderBodyTabContent(tab); }
+function setBodyTab(tab,el){
+  activeBodyTab=tab;
+  document.querySelectorAll('#bodyTabs .tab-btn').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const btn=document.getElementById('bodyAddBtnInner');
+  if(tab==='gym'){ btn.textContent='+ Log Workout'; btn.onclick=openWorkoutModal; }
+  else { btn.textContent='+ Add Note'; btn.onclick=openBodyModal; }
+  renderBodyTabContent(tab);
+}
 function renderBodyTabContent(tab){
+  if(tab==='gym'){ renderGymContent(); return; }
   const cfg=BODY_CFG[tab];
   const notes=S.bodyNotes.filter(n=>n.categ===tab).sort((a,b)=>b.ts-a.ts);
   document.getElementById('bodyTabContent').innerHTML=`
