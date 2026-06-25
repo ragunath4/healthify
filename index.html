@@ -57,13 +57,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
 .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; transition: background 0.3s; }
 
 /* ── Bottom nav (mobile) ── */
-.bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 300; background: var(--text); border-top: 1px solid rgba(255,255,255,0.08); padding: 0; padding-bottom: env(safe-area-inset-bottom); }
-.bottom-nav-inner { display: flex; align-items: stretch; height: 60px; }
-.bottom-nav-btn { flex: 1; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: #6B6860; font-family: var(--font-body); font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; transition: color 0.15s; padding: 0 4px; }
-.bottom-nav-btn .bn-icon { width: 22px; height: 22px; display: block; }
+.bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 300; background: var(--bg); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -2px 16px rgba(0,0,0,0.07); }
+.bottom-nav-inner { display: flex; align-items: center; height: 64px; padding: 6px 8px; gap: 2px; }
+.bottom-nav-btn { flex: 1; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; color: var(--text2); font-family: var(--font-body); font-size: 10px; font-weight: 600; letter-spacing: 0.02em; transition: all 0.18s; padding: 6px 4px; border-radius: 14px; }
+.bottom-nav-btn .bn-icon { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; }
 .bottom-nav-btn .bn-icon svg { width: 22px; height: 22px; }
-.bottom-nav-btn.active { color: var(--accent); }
-.bottom-nav-btn:active { opacity: 0.7; }
+.bottom-nav-btn.active { background: var(--text); color: #fff; border-radius: 14px; }
+.bottom-nav-btn.active .bn-icon svg { stroke: #fff; }
+.bottom-nav-btn:active { opacity: 0.75; }
 
 /* ── Main ── */
 .main-content { margin-left: 220px; flex: 1; min-width: 0; }
@@ -511,6 +512,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--font-body);
       <button class="tab-btn" onclick="setBodyTab('teeth',this)">🦷 Teeth</button>
       <button class="tab-btn" onclick="setBodyTab('hair',this)">💇 Hair</button>
       <button class="tab-btn" onclick="setBodyTab('face',this)">🧴 Face</button>
+      <button class="tab-btn" onclick="setBodyTab('lipbalm',this)">💋 Lip</button>
       <button class="tab-btn" onclick="setBodyTab('gym',this)">🏋️ Gym</button>
     </div>
 
@@ -831,6 +833,7 @@ const CHECKLIST = [
   {id:'hair',     emoji:'💇', name:'Hair Care',  sub:'Comb / Oil / Wash'},
   {id:'face_am',  emoji:'🧴', name:'Face (AM)',  sub:'Morning face care'},
   {id:'face_pm',  emoji:'🧴', name:'Face (PM)',  sub:'Night face care'},
+  {id:'lipbalm',  emoji:'💋', name:'Lip Balm',   sub:'Lip care'},
 ];
 
 const BODY_CFG = {
@@ -861,6 +864,12 @@ const BODY_CFG = {
     {id:'b_fcond',   lbl:'Skin Condition',  type:'select', opts:['Clear','Dry','Oily','Acne','Redness','Dull']},
     {id:'b_sun',     lbl:'Sunscreen?',      type:'select', opts:['Yes','No']},
     {id:'b_break',   lbl:'Breakout?',       type:'select', opts:['None','1-2','Multiple','Cystic']},
+  ]},
+  lipbalm: { emoji:'💋', label:'Lip Balm', fields:[
+    {id:'b_lb_brand', lbl:'Brand / Product',  type:'text',   ph:'e.g. Vaseline, Nivea, Himalaya'},
+    {id:'b_lb_times', lbl:'Times Applied',    type:'select', opts:['1x','2x','3x','4x','5x+']},
+    {id:'b_lb_cond',  lbl:'Lip Condition',    type:'select', opts:['Normal','Dry','Chapped','Cracked','Healing','Smooth']},
+    {id:'b_lb_spf',   lbl:'SPF Protection?',  type:'select', opts:['No','Yes']},
   ]},
 };
 
